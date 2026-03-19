@@ -19,13 +19,40 @@ async function login(){
 }
 
 async function signup(){
-  const u=document.getElementById("username").value
-  const p=document.getElementById("password").value
-  const res=await api("/signup","POST",{username:u,password:p})
-  if(res.success){
-    alert("Account created")
-    window.location.href="login.html"
-  }else alert(res.error)
+
+  console.log("signup clicked") // debug
+
+  const u = document.getElementById("username").value
+  const p = document.getElementById("password").value
+
+  if(!u || !p){
+    return alert("Fill all fields")
+  }
+
+  try{
+    const res = await fetch("/signup",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body: JSON.stringify({username:u,password:p})
+    })
+
+    const data = await res.json()
+
+    console.log("server response:", data) // debug
+
+    if(data.success){
+      alert("Account created")
+      window.location.href="login.html"
+    }else{
+      alert(data.error || "Signup failed")
+    }
+
+  }catch(err){
+    console.error(err)
+    alert("Network error")
+  }
 }
 
 async function logout(){
