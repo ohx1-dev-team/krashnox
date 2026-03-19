@@ -133,22 +133,6 @@ async function loadInbox(){
   }
 }
 
-    div.innerHTML =
-      `<span class="${unread ? "mailUnread" : ""}">
-        <b>${m.fromUser}</b> - ${m.subject}
-        ${unread ? '<span class="unreadDot"></span>' : ""}
-      </span>`
-
-    div.onclick = ()=>{
-      sessionStorage.setItem("threadId", m.threadId)
-      window.location.href = "view.html"
-    }
-
-    list.appendChild(div)
-  }
-}
-
-// -------------------
 // LOAD SENT
 // -------------------
 async function loadSent(){
