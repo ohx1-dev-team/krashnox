@@ -82,27 +82,29 @@ async function loadInbox(){
   list.innerHTML = ""
 
   const username = sessionStorage.getItem("username")
-  const seen = new Set()
 
   for(const m of mails){
-
-    // anti-dupe
-    if(seen.has(m.threadId)) continue
-    seen.add(m.threadId)
 
     const div = document.createElement("div")
     div.className = "mail-item"
 
-    // check entire thread for unread messages
-    const thread = await api("/api/thread?id="+m.threadId)
+    // unread = latest message is unread AND it's for me
+    const unread = m.read === 0 && m.toUser === username
 
-    let unread = false
-    for(const msg of thread){
-      if(msg.toUser === username && msg.read === 0){
-        unread = true
-        break
-      }
+    div.innerHTML =
+      `<span class="${unread ? "mailUnread" : ""}">
+        <b>${m.fromUser}</b> - ${m.subject}
+        ${unread ? '<span class="unreadDot"></span>' : ""}
+      </span>`
+
+    div.onclick = ()=>{
+      sessionStorage.setItem("threadId", m.threadId)
+      window.location.href = "view.html"
     }
+
+    list.appendChild(div)
+  }
+}
 
     div.innerHTML =
       `<span class="${unread ? "mailUnread" : ""}">
