@@ -110,13 +110,16 @@ async function loadInbox(){
 
   const username = sessionStorage.getItem("username")
 
-  for(const m of mails){
+  // NEW: filter only messages where toUser is current user
+  const inboxMails = mails.filter(m => m.toUser === username)
+
+  for(const m of inboxMails){
 
     const div = document.createElement("div")
     div.className = "mail-item"
 
     // unread = latest message is unread AND it's for me
-    const unread = m.read === 0 && m.toUser === username
+    const unread = m.read === 0
 
     div.innerHTML =
       `<span class="${unread ? "mailUnread" : ""}">
@@ -133,6 +136,7 @@ async function loadInbox(){
   }
 }
 
+// -------------------
 // LOAD SENT
 // -------------------
 async function loadSent(){
@@ -143,7 +147,12 @@ async function loadSent(){
 
   list.innerHTML = ""
 
-  for(const m of mails){
+  const username = sessionStorage.getItem("username")
+
+  // NEW: filter only messages where fromUser is current user
+  const sentMails = mails.filter(m => m.fromUser === username)
+
+  for(const m of sentMails){
 
     const div = document.createElement("div")
     div.className = "mail-item"
