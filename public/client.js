@@ -97,76 +97,47 @@ async function sendMessage(){
   }
 }
 
-// -------------------
 // LOAD INBOX
-// -------------------
 async function loadInbox(){
-
   const mails = await api("/api/inbox-collapsed")
   const list = document.getElementById("mailList")
   if(!list) return
-
   list.innerHTML = ""
-
   const username = sessionStorage.getItem("username")
-
-  // NEW: filter only messages where toUser is current user
-  const inboxMails = mails.filter(m => m.toUser === username)
-
-  for(const m of inboxMails){
-
+  for(const m of mails){
     const div = document.createElement("div")
     div.className = "mail-item"
-
-    // unread = latest message is unread AND it's for me
-    const unread = m.read === 0
-
+    const unread = m.read === 0 && m.toUser === username
     div.innerHTML =
       `<span class="${unread ? "mailUnread" : ""}">
         <b>${m.fromUser}</b> - ${m.subject}
         ${unread ? '<span class="unreadDot"></span>' : ""}
       </span>`
-
     div.onclick = ()=>{
       sessionStorage.setItem("threadId", m.threadId)
       window.location.href = "view.html"
     }
-
     list.appendChild(div)
   }
 }
 
-// -------------------
 // LOAD SENT
-// -------------------
 async function loadSent(){
-
   const mails = await api("/api/sent-collapsed")
   const list = document.getElementById("mailList")
   if(!list) return
-
   list.innerHTML = ""
-
-  const username = sessionStorage.getItem("username")
-
-  // NEW: filter only messages where fromUser is current user
-  const sentMails = mails.filter(m => m.fromUser === username)
-
-  for(const m of sentMails){
-
+  for(const m of mails){
     const div = document.createElement("div")
     div.className = "mail-item"
-
     div.innerHTML =
       `<span>
         To <b>${m.toUser}</b> - ${m.subject}
       </span>`
-
     div.onclick = ()=>{
       sessionStorage.setItem("threadId", m.threadId)
       window.location.href = "view.html"
     }
-
     list.appendChild(div)
   }
 }
