@@ -14,42 +14,34 @@ app.use(session({
   saveUninitialized: false
 }))
 
-app.use((req,res,next)=>{
-  if(req.path === "/admin.html"){
-    if(!req.session.admin){
-      return res.redirect("/login.html")
-    }
-  }
-  next()
-})
+// --- NEW MIDDLEWARE FUNCTIONS ---
+// These replace the repetitive middleware blocks you had earlier
 
-app.use((req,res,next)=>{
-  if(req.path === "/inbox.html"){
-    if(!req.session.admin){
-      return res.redirect("/login.html")
+function requireAuth(req, res, next) {
+  if (!req.session.user) {
+    // If it's an API request, return JSON error
+    if (req.xhr || req.headers.accept?.includes('application/json')) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
     }
+    // Otherwise redirect to login
+    return res.redirect('/login.html');
   }
-  next()
-})
+  next();
+}
 
-app.use((req,res,next)=>{
-  if(req.path === "/sent.html"){
-    if(!req.session.admin){
-      return res.redirect("/login.html")
+function requireAdmin(req, res, next) {
+  if (!req.session.admin) {
+    // If it's an API request, return JSON error
+    if (req.xhr || req.headers.accept?.includes('application/json')) {
+      return res.status(403).json({ success: false, error: 'Admin access required' });
     }
+    // Otherwise redirect to login
+    return res.redirect('/login.html');
   }
-  next()
-})
+  next();
+}
 
-app.use((req,res,next)=>{
-  if(req.path === "/compose.html"){
-    if(!req.session.admin){
-      return res.redirect("/login.html")
-    }
-  }
-  next()
-})
-
+// Serve static files AFTER auth middleware so we can intercept HTML requests
 app.use(express.static("public"))
 
 /* ---------------- DATABASE ---------------- */
@@ -133,11 +125,28 @@ app.post("/logout",(req,res)=>{
   req.session.destroy(()=>res.json({success:true}))
 })
 
+/* ---------------- PROTECTED HTML PAGES ---------------- */
+// Using the new middleware functions here instead of global middleware blocks
+
+app.get("/admin.html", requireAdmin, (req, res) => {
+  res.sendFile(path.join(__dirname, "public/admin.html"));
+});
+
+app.get("/inbox.html", requireAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, "public/inbox.html"));
+});
+
+app.get("/sent.html", requireAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, "public/sent.html"));
+});
+
+app.get("/compose.html", requireAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, "public/compose.html"));
+});
+
 /* ---------------- SEND MESSAGE ---------------- */
 
-app.post("/api/send",(req,res)=>{
-  if(!req.session.user) return res.json({success:false})
-
+app.post("/api/send", requireAuth, (req,res)=>{
   const {toUser,subject,body,threadId} = req.body
   const sender = req.session.user
 
@@ -166,9 +175,7 @@ app.post("/api/send",(req,res)=>{
 
 /* ---------------- INBOX THREADS ---------------- */
 
-app.get("/api/inbox-collapsed",(req,res)=>{
-  if(!req.session.user) return res.json([])
-
+app.get("/api/inbox-collapsed", requireAuth, (req,res)=>{
   const user=req.session.user
 
   db.all(`
@@ -188,9 +195,7 @@ app.get("/api/inbox-collapsed",(req,res)=>{
 
 /* ---------------- SENT THREADS ---------------- */
 
-app.get("/api/sent-collapsed",(req,res)=>{
-  if(!req.session.user) return res.json([])
-
+app.get("/api/sent-collapsed", requireAuth, (req,res)=>{
   const user=req.session.user
 
   db.all(`
@@ -210,7 +215,7 @@ app.get("/api/sent-collapsed",(req,res)=>{
 
 /* ---------------- THREAD VIEW ---------------- */
 
-app.get("/api/thread",(req,res)=>{
+app.get("/api/thread", requireAuth, (req,res)=>{
   const threadId=req.query.id
 
   db.all(
@@ -222,7 +227,7 @@ app.get("/api/thread",(req,res)=>{
 
 /* ---------------- DELETE MESSAGE ---------------- */
 
-app.post("/api/delete",(req,res)=>{
+app.post("/api/delete", requireAuth, (req,res)=>{
   const {id}=req.body
 
   db.run(
@@ -234,7 +239,7 @@ app.post("/api/delete",(req,res)=>{
 
 /* ---------------- MARK READ ---------------- */
 
-app.post("/api/mark-read",(req,res)=>{
+app.post("/api/mark-read", requireAuth, (req,res)=>{
   const {id}=req.body
 
   db.run(
@@ -246,18 +251,14 @@ app.post("/api/mark-read",(req,res)=>{
 
 /* ---------------- ADMIN ---------------- */
 
-app.get("/api/users",(req,res)=>{
-  if(!req.session.admin) return res.json([])
-
+app.get("/api/users", requireAdmin, (req,res)=>{
   db.all(
     "SELECT username FROM users",
     (err,rows)=>res.json(rows||[])
   )
 })
 
-app.post("/api/delete-user",(req,res)=>{
-  if(!req.session.admin) return res.json({success:false})
-
+app.post("/api/delete-user", requireAdmin, (req,res)=>{
   const {username}=req.body
 
   db.run(
@@ -265,12 +266,6 @@ app.post("/api/delete-user",(req,res)=>{
     [username],
     err=>res.json({success:!err})
   )
-})
-
-app.get("/admin.html",(req,res)=>{
-  if(!req.session.admin) return res.redirect("/login.html")
-
-  res.sendFile(path.join(__dirname,"public/admin.html"))
 })
 
 /* ---------------- START SERVER ---------------- */
