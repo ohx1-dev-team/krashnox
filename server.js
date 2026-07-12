@@ -23,6 +23,33 @@ app.use((req,res,next)=>{
   next()
 })
 
+app.use((req,res,next)=>{
+  if(req.path === "/inbox.html"){
+    if(!req.session.admin){
+      return res.redirect("/login.html")
+    }
+  }
+  next()
+})
+
+app.use((req,res,next)=>{
+  if(req.path === "/sent.html"){
+    if(!req.session.admin){
+      return res.redirect("/login.html")
+    }
+  }
+  next()
+})
+
+app.use((req,res,next)=>{
+  if(req.path === "/compose.html"){
+    if(!req.session.admin){
+      return res.redirect("/login.html")
+    }
+  }
+  next()
+})
+
 app.use(express.static("public"))
 
 /* ---------------- DATABASE ---------------- */
