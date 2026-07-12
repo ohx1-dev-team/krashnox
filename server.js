@@ -18,17 +18,14 @@ app.use(express.json());
 // --- SESSION CONFIGURATION ---
 app.use(
   session({
-    secret: "secret123", 
+    secret: "secret123", // Ideally move this to an env var in production
     resave: false,
     saveUninitialized: false,
     cookie: {
-      // TEMPORARY FIX: Set to false if you are testing on HTTP or having issues
-      // Change back to true ONLY when you are sure you are on HTTPS
-      secure: false, 
-      
+      secure: process.env.NODE_ENV === "production", // True on Render (HTTPS)
       httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000, 
-      sameSite: "lax", // "lax" is usually safest for redirects
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      sameSite: "lax",
     },
   })
 );
