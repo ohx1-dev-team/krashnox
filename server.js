@@ -150,11 +150,11 @@ app.get("/api/inbox-collapsed",(req,res)=>{
     INNER JOIN (
       SELECT threadId, MAX(id) as lastId
       FROM messages
-      WHERE toUser = ? OR fromUser = ?
+      WHERE toUser = ? 
       GROUP BY threadId
     ) t ON m.id = t.lastId
     ORDER BY m.id DESC
-  `,[user,user],(err,rows)=>{
+  `,[user],(err,rows)=>{
     res.json(rows || [])
   })
 })
