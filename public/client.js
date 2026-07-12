@@ -1,12 +1,18 @@
-// API helper
-async function api(url, method="GET", data=null){
-  const options={method,headers:{}}
-  if(data){
-    options.headers["Content-Type"]="application/json"
-    options.body=JSON.stringify(data)
+// Make sure your helper looks like THIS:
+async function api(endpoint, method = "GET", body = null) {
+  const options = {
+    method: method,
+    headers: {
+      "Content-Type": "application/json"
+    }
+  };
+
+  if (body) {
+    options.body = JSON.stringify(body);
   }
-  const res=await fetch(url,options)
-  return res.json()
+
+  const response = await fetch(endpoint, options);
+  return await response.json();
 }
 
 // LOGIN / SIGNUP
@@ -55,9 +61,15 @@ async function signup(){
   }
 }
 
-async function logout(){
-  await api("/logout","POST")
-  window.location.href="index.html"
+async function logout() {
+  try {
+    await api("/logout", "POST");
+    // Optional: Force a hard reload to clear any cached JS state
+    window.location.replace("/index.html"); 
+  } catch (err) {
+    console.error("Logout failed", err);
+    alert("Could not log out. Try refreshing.");
+  }
 }
 
 // SEND / REPLY
