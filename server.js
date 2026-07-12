@@ -14,8 +14,7 @@ app.use(session({
   saveUninitialized: false
 }))
 
-// --- NEW MIDDLEWARE FUNCTIONS ---
-// These replace the repetitive middleware blocks you had earlier
+// --- MIDDLEWARE FUNCTIONS ---
 
 function requireAuth(req, res, next) {
   if (!req.session.user) {
@@ -41,9 +40,6 @@ function requireAdmin(req, res, next) {
   next();
 }
 
-// Serve static files AFTER auth middleware so we can intercept HTML requests
-app.use(express.static("public"))
-
 /* ---------------- DATABASE ---------------- */
 
 db.run(`
@@ -68,7 +64,6 @@ CREATE TABLE IF NOT EXISTS messages(
 
 /* ---------------- LOGIN ---------------- */
 
-// LOGIN
 app.post("/login",(req,res)=>{
   const {username,password} = req.body
 
@@ -126,7 +121,7 @@ app.post("/logout",(req,res)=>{
 })
 
 /* ---------------- PROTECTED HTML PAGES ---------------- */
-// Using the new middleware functions here instead of global middleware blocks
+// IMPORTANT: These MUST come BEFORE express.static so they intercept the request first
 
 app.get("/admin.html", requireAdmin, (req, res) => {
   res.sendFile(path.join(__dirname, "public/admin.html"));
@@ -267,6 +262,10 @@ app.post("/api/delete-user", requireAdmin, (req,res)=>{
     err=>res.json({success:!err})
   )
 })
+
+/* ---------------- STATIC FILES ---------------- */
+// MOVED TO THE END: This ensures specific routes (like /inbox.html) are checked FIRST
+app.use(express.static("public"))
 
 /* ---------------- START SERVER ---------------- */
 
