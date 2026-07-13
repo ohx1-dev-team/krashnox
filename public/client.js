@@ -20,8 +20,13 @@ async function login(){
   const u=document.getElementById("username").value
   const p=document.getElementById("password").value
   const res=await api("/login","POST",{username:u,password:p})
-  if(res.success) window.location.href=res.isAdmin?"admin.html":"inbox.html"
-  else alert(res.error)
+  
+  if(res.success) {
+    sessionStorage.setItem("username", u); // ADD THIS LINE
+    window.location.href=res.isAdmin?"admin.html":"inbox.html"
+  } else {
+    alert(res.error)
+  }
 }
 
 async function signup(){
